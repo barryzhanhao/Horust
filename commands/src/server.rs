@@ -1,8 +1,5 @@
 use crate::proto::messages::horust_msg_message::MessageType::Request;
-use crate::proto::messages::{
-    horust_msg_message, horust_msg_request, horust_msg_response, HorustMsgError, HorustMsgMessage,
-    HorustMsgRequest, HorustMsgResponse, HorustMsgServiceStatus, HorustMsgServiceStatusResponse,
-};
+use crate::proto::messages::{horust_msg_message, horust_msg_request, horust_msg_response, HorustMsgError, HorustMsgMessage, HorustMsgRequest, HorustMsgResponse, HorustMsgServiceInfoResponse, HorustMsgServiceStatus, HorustMsgServiceStatusResponse};
 use crate::UdsConnectionHandler;
 use anyhow::{anyhow, Result};
 use log::{error, info};
@@ -54,7 +51,24 @@ pub trait CommandsHandlerTrait {
                         .map(|status| {
                             new_horust_msg_service_status_response(
                                 status_request.service_name,
-                                status,
+                                status
+                            )
+                        })
+                        .unwrap_or_else(|err| {
+                            new_horust_msg_error_response(format!(
+                                "Error from status handler: {err}",
+                            ))
+                        })
+                }
+                horust_msg_request::Request::InfoRequest(info_request) => {
+                    info!("Requested info for {}", info_request.service_name);
+
+                    let service_info = self.get_service_info(&info_request.service_name);
+                    service_info
+                        .map(|info| {
+                            new_horust_msg_service_info_response(
+                                info_request.service_name,
+                                info
                             )
                         })
                         .unwrap_or_else(|err| {
@@ -91,6 +105,9 @@ pub trait CommandsHandlerTrait {
     }
 
     fn get_service_status(&self, service_name: &str) -> Result<HorustMsgServiceStatus>;
+
+    fn get_service_info(&self, service_name: &str) -> Result<String>;
+
     fn update_service_status(
         &self,
         service_name: &str,
@@ -121,6 +138,24 @@ pub fn new_horust_msg_service_status_response(
                     HorustMsgServiceStatusResponse {
                         service_name,
                         service_status: status.into(),
+                    },
+                )),
+            },
+        )),
+    }
+}
+
+pub fn new_horust_msg_service_info_response(
+    service_name: String,
+    info:String
+) -> HorustMsgMessage {
+    HorustMsgMessage {
+        message_type: Some(horust_msg_message::MessageType::Response(
+            HorustMsgResponse {
+                response: Some(horust_msg_response::Response::InfoResponse(
+                    HorustMsgServiceInfoResponse {
+                        service_name,
+                        info: info
                     },
                 )),
             },

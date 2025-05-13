@@ -1,8 +1,5 @@
 use crate::proto::messages::horust_msg_message::MessageType;
-use crate::proto::messages::{
-    horust_msg_request, horust_msg_response, HorustMsgMessage, HorustMsgRequest,
-    HorustMsgServiceStatusRequest,
-};
+use crate::proto::messages::{horust_msg_request, horust_msg_response, HorustMsgMessage, HorustMsgRequest, HorustMsgServiceInfoRequest, HorustMsgServiceStatusRequest};
 use crate::{HorustMsgServiceStatus, UdsConnectionHandler};
 use anyhow::{anyhow, Context};
 use anyhow::{bail, Result};
@@ -29,6 +26,7 @@ fn unwrap_response(response: HorustMsgMessage) -> Option<Result<horust_msg_respo
                 Some(Err(anyhow!("Error: {}", error.error_string)))
             }
             horust_msg_response::Response::StatusResponse(_status) => Some(Ok(v)),
+            horust_msg_response::Response::InfoResponse(_status) => Some(Ok(v)),
         };
     }
     None
@@ -45,6 +43,7 @@ impl ClientHandler {
             ),
         })
     }
+
     pub fn send_status_request(
         &mut self,
         service_name: String,
@@ -65,6 +64,32 @@ impl ClientHandler {
             Ok((
                 resp.service_name,
                 HorustMsgServiceStatus::try_from(resp.service_status).unwrap(),
+            ))
+        } else {
+            bail!("Invalid response received: {:?}", response);
+        }
+    }
+
+    pub fn send_info_request(
+        &mut self,
+        service_name: String,
+    ) -> Result<(String,String)> {
+        let info = new_request(horust_msg_request::Request::InfoRequest(
+            HorustMsgServiceInfoRequest { service_name },
+        ));
+        self.uds_connection_handler.send_message(info)?;
+        // server is waiting for EOF.
+        self.uds_connection_handler
+            .socket
+            .shutdown(Shutdown::Write)?;
+        //Reads all bytes until EOF in this source, appending them to buf.
+        let received = self.uds_connection_handler.receive_message()?;
+        debug!("Client: received: {received:?}");
+        let response = unwrap_response(received).unwrap()?;
+        if let horust_msg_response::Response::InfoResponse(resp) = response {
+            Ok((
+                resp.service_name,
+                resp.info
             ))
         } else {
             bail!("Invalid response received: {:?}", response);

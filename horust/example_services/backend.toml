@@ -1,8 +1,10 @@
 # no name specified - filename will be used instead.
-command = "/bigger/failing.sh second"
-working-directory = "/tmp/"
-start-after = ["database"]
-start-delay = "2s"
+name="sqlite"
+command = "./sqlite -Xms1g -Xmx1g"
+working-directory = "/home/Opensource/practice-project/sqlite/build/native/nativeCompile"
+stdout = "./logs/stdout.log"
+stdout-rotate-size = "100 MB"
+stdout-should-append-timestamp-to-filename = false
+
 [restart]
 strategy = "always"
-#restart-backoff = "10s"

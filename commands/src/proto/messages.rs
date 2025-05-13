@@ -16,7 +16,7 @@ pub mod horust_msg_message {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct HorustMsgRequest {
-    #[prost(oneof = "horust_msg_request::Request", tags = "1, 2")]
+    #[prost(oneof = "horust_msg_request::Request", tags = "1, 2, 3")]
     pub request: ::core::option::Option<horust_msg_request::Request>,
 }
 /// Nested message and enum types in `HorustMsgRequest`.
@@ -27,11 +27,13 @@ pub mod horust_msg_request {
         StatusRequest(super::HorustMsgServiceStatusRequest),
         #[prost(message, tag = "2")]
         ChangeRequest(super::HorustMsgServiceChangeRequest),
+        #[prost(message, tag = "3")]
+        InfoRequest(super::HorustMsgServiceInfoRequest),
     }
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct HorustMsgResponse {
-    #[prost(oneof = "horust_msg_response::Response", tags = "1, 2")]
+    #[prost(oneof = "horust_msg_response::Response", tags = "1, 2, 3")]
     pub response: ::core::option::Option<horust_msg_response::Response>,
 }
 /// Nested message and enum types in `HorustMsgResponse`.
@@ -42,6 +44,8 @@ pub mod horust_msg_response {
         Error(super::HorustMsgError),
         #[prost(message, tag = "2")]
         StatusResponse(super::HorustMsgServiceStatusResponse),
+        #[prost(message, tag = "3")]
+        InfoResponse(super::HorustMsgServiceInfoResponse),
     }
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -67,6 +71,18 @@ pub struct HorustMsgServiceChangeRequest {
     pub service_name: ::prost::alloc::string::String,
     #[prost(enumeration = "HorustMsgServiceStatus", tag = "2")]
     pub service_status: i32,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct HorustMsgServiceInfoRequest {
+    #[prost(string, tag = "1")]
+    pub service_name: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct HorustMsgServiceInfoResponse {
+    #[prost(string, tag = "1")]
+    pub service_name: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub info: ::prost::alloc::string::String,
 }
 /// return the current status - similar to HorustServiceStatusResponse.
 #[derive(Clone, PartialEq, ::prost::Message)]

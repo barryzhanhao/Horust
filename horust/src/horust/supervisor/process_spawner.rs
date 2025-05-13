@@ -14,6 +14,7 @@ use std::{
     io::{self, Read},
     os::fd::OwnedFd,
 };
+use std::fs;
 
 use crate::horust::bus::BusConnector;
 use crate::horust::formats::{Event, LogOutput, Service};
@@ -235,7 +236,14 @@ fn open_next_chunk(
 fn chunked_writer(fd: OwnedFd, service: Service) -> Result<()> {
     let source = File::from(fd);
     let path = match &service.stdout {
-        LogOutput::Path(path) => path,
+        LogOutput::Path(path) =>{
+            if let Some(parent) = path.parent() {
+                if !parent.exists() {
+                    fs::create_dir_all(parent)?;
+                }
+            }
+            path
+        },
         _ => return Err(anyhow!("Log output path is not set")),
     };
     let mut chunk = 0;

@@ -31,6 +31,14 @@ impl CommandsHandlerTrait for MockCommandsHandler {
         })
     }
 
+    fn get_service_info(&self, service_name: &str) -> Result<String> {
+        Ok(match service_name {
+            "Running" => String::from("ok"),
+            "Started" => String::from("ok"),
+            _ => unimplemented!(),
+        })
+    }
+
     fn update_service_status(
         &self,
         _service_name: &str,
