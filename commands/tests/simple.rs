@@ -42,9 +42,13 @@ impl CommandsHandlerTrait for MockCommandsHandler {
     fn update_service_status(
         &self,
         _service_name: &str,
-        _new_status: HorustMsgServiceStatus,
-    ) -> Result<()> {
-        todo!()
+        _new_status: HorustChangeServiceStatus,
+    ) -> Result<HorustMsgServiceStatus> {
+        Ok(match _service_name {
+            "Running" => HorustMsgServiceStatus::Running,
+            "Started" => HorustMsgServiceStatus::Failed,
+            _ => unimplemented!(),
+        })
     }
 }
 fn init() {

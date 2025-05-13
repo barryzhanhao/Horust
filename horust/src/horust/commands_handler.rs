@@ -1,8 +1,8 @@
 use crate::horust::bus::BusConnector;
 use crate::horust::formats::{ServiceName, ServiceStatus};
 use crate::horust::Event;
-use anyhow::{anyhow, Result};
-use horust_commands_lib::{CommandsHandlerTrait, HorustMsgServiceStatus};
+use anyhow::{anyhow, bail, Result};
+use horust_commands_lib::{CommandsHandlerTrait, HorustMsgServiceStatus,HorustChangeServiceStatus};
 use std::collections::HashMap;
 use std::os::unix::net::UnixListener;
 use std::path::PathBuf;
@@ -110,18 +110,27 @@ impl CommandsHandlerTrait for CommandsHandler {
 
     fn update_service_status(
         &self,
-        _service_name: &str,
-        _new_status: HorustMsgServiceStatus,
-    ) -> Result<()> {
-        /*
+        service_name: &str,
+        new_status: HorustChangeServiceStatus,
+    ) -> Result<HorustMsgServiceStatus> {
         match self.services.get(service_name) {
             None => bail!("Service {service_name} not found."),
-            Some(service_status) if from_service_status(service_status) != new_status => {
-                //self.bus.send_event(Event::Kill())
+            Some(service_status) if *service_status == ServiceStatus::Running => {
+                match  new_status{
+                    HorustChangeServiceStatus::Start => {
+                        self.bus.send_event(Event::StatusUpdate(service_name.to_string(),ServiceStatus::InKilling));
+                        self.bus.send_event(Event::ForceKill(service_name.to_string()));
+                        self.bus.send_event(Event::Run(service_name.to_string()))
+                    }
+                    HorustChangeServiceStatus::Stop => {
+                        self.bus.send_event(Event::StatusUpdate(service_name.to_string(),ServiceStatus::InKilling));
+                        self.bus.send_event(Event::ForceKill(service_name.to_string()))
+                    }
+                }
             }
-            _ => (),
-        };*/
-        todo!();
+            _ => bail!("Service {service_name} status is not present."),
+        };
+        self.get_service_status(service_name)
     }
 }
 

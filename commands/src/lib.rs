@@ -6,6 +6,7 @@ mod proto;
 mod server;
 use crate::proto::messages::HorustMsgMessage;
 pub use crate::proto::messages::HorustMsgServiceStatus;
+pub use crate::proto::messages::HorustChangeServiceStatus;
 use anyhow::{Context, Result};
 pub use client::ClientHandler;
 use log::debug;

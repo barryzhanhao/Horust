@@ -30,6 +30,7 @@ struct HorustctlArgs {
 enum Commands {
     Status(StatusArgs),
     Info(InfoArgs),
+    Change(ChangeArgs),
 }
 
 #[derive(Args, Debug)]
@@ -37,10 +38,15 @@ struct StatusArgs {
     service_name: Option<String>,
 }
 
-
 #[derive(Args, Debug)]
 struct InfoArgs {
     service_name: Option<String>,
+}
+
+#[derive(Args, Debug)]
+struct ChangeArgs {
+    service_name: Option<String>,
+    service_status: Option<String>,
 }
 
 fn main() -> Result<()> {
@@ -70,6 +76,15 @@ fn main() -> Result<()> {
                 uds_handler.send_info_request(info_args.service_name.clone().unwrap())?;
             println!(
                 "Current Info for '{service_name}' is: '{}'.", service_info.as_str()
+            );
+        },
+        Commands::Change(change_args) => {
+            debug!("Change command received: {change_args:?}");
+            debug!("uds path : {uds_path:?}");
+            let (service_name,service_status) =
+                uds_handler.send_change_request(change_args.service_name.clone().unwrap(),change_args.service_status.clone().unwrap())?;
+            println!(
+                "Change service '{service_name}' status '{}' result is: '{}'.", change_args.service_status.clone().unwrap(),service_status.as_str_name(),
             );
         }
     }

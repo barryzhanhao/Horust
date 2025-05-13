@@ -1,5 +1,5 @@
 use crate::proto::messages::horust_msg_message::MessageType::Request;
-use crate::proto::messages::{horust_msg_message, horust_msg_request, horust_msg_response, HorustMsgError, HorustMsgMessage, HorustMsgRequest, HorustMsgResponse, HorustMsgServiceInfoResponse, HorustMsgServiceStatus, HorustMsgServiceStatusResponse};
+use crate::proto::messages::{horust_msg_message, horust_msg_request, horust_msg_response, HorustChangeServiceStatus, HorustMsgError, HorustMsgMessage, HorustMsgRequest, HorustMsgResponse, HorustMsgServiceChangeResponse, HorustMsgServiceInfoResponse, HorustMsgServiceStatus, HorustMsgServiceStatusResponse};
 use crate::UdsConnectionHandler;
 use anyhow::{anyhow, Result};
 use log::{error, info};
@@ -82,21 +82,19 @@ pub trait CommandsHandlerTrait {
                         "Requested service update for {} to {}",
                         change_request.service_name, change_request.service_status
                     );
-                    new_horust_msg_error_response("Unimplemented!".to_string())
-                    /*self.update_service_status(
+                    self.update_service_status(
                         &change_request.service_name,
-                        HorustMsgServiceStatus::from_i32(change_request.service_status).unwrap(),
+                        HorustChangeServiceStatus::from_i32(change_request.service_status).unwrap(),
                     )
                     .map(|new_status| {
-                        // TODO:
-                        new_horust_msg_service_status_response(
+                        new_horust_msg_service_change_response(
                             change_request.service_name,
                             new_status,
                         )
                     })
                     .unwrap_or_else(|err| {
                         new_horust_msg_error_response(format!("Error from change handler: {err}"))
-                    })*/
+                    })
                 }
             };
             uds_conn_handler.send_message(response)?;
@@ -111,8 +109,8 @@ pub trait CommandsHandlerTrait {
     fn update_service_status(
         &self,
         service_name: &str,
-        new_status: HorustMsgServiceStatus,
-    ) -> Result<()>;
+        new_status: HorustChangeServiceStatus,
+    ) -> Result<HorustMsgServiceStatus>;
 }
 
 pub fn new_horust_msg_error_response(error: String) -> HorustMsgMessage {
@@ -136,6 +134,24 @@ pub fn new_horust_msg_service_status_response(
             HorustMsgResponse {
                 response: Some(horust_msg_response::Response::StatusResponse(
                     HorustMsgServiceStatusResponse {
+                        service_name,
+                        service_status: status.into(),
+                    },
+                )),
+            },
+        )),
+    }
+}
+
+pub fn new_horust_msg_service_change_response(
+    service_name: String,
+    status: HorustMsgServiceStatus,
+) -> HorustMsgMessage {
+    HorustMsgMessage {
+        message_type: Some(horust_msg_message::MessageType::Response(
+            HorustMsgResponse {
+                response: Some(horust_msg_response::Response::ChangeResponse(
+                    HorustMsgServiceChangeResponse {
                         service_name,
                         service_status: status.into(),
                     },
