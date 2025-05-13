@@ -82,9 +82,10 @@ pub trait CommandsHandlerTrait {
                         "Requested service update for {} to {}",
                         change_request.service_name, change_request.service_status
                     );
+
                     self.update_service_status(
                         &change_request.service_name,
-                        HorustChangeServiceStatus::from_i32(change_request.service_status).unwrap(),
+                        HorustChangeServiceStatus::try_from(change_request.service_status).unwrap(),
                     )
                     .map(|new_status| {
                         new_horust_msg_service_change_response(
