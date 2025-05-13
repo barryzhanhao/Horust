@@ -1,6 +1,5 @@
 use anyhow::{anyhow, bail, Result};
 use clap::{Args, Parser, Subcommand};
-use env_logger::Env;
 use horust_commands_lib::{get_path, ClientHandler};
 use log::debug;
 use std::fs::read_dir;
@@ -50,7 +49,12 @@ struct ChangeArgs {
 }
 
 fn main() -> Result<()> {
-    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
+    // Set up logging.
+    let env = env_logger::Env::new()
+        .filter("HORUST_LOG")
+        .write_style("HORUST_LOG_STYLE");
+    env_logger::init_from_env(env);
+
     let args = HorustctlArgs::parse();
     debug!("args: {args:?}");
 
